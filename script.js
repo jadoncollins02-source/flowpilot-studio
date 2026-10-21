@@ -8,28 +8,50 @@ document.querySelectorAll('.nav a').forEach(link => link.addEventListener('click
   nav.classList.remove('open');
   menuButton?.setAttribute('aria-expanded', 'false');
 }));
+
+const serviceSelect = document.querySelector('#service');
+const serviceSearch = document.querySelector('#service-search');
+const serviceCards = [...document.querySelectorAll('.service-card')];
+const noResults = document.querySelector('#no-results');
+const serviceGrid = document.querySelector('#service-grid');
+
+function filterServices() {
+  const query = (serviceSearch?.value || '').trim().toLowerCase();
+  const terms = query.split(/\s+/).filter(Boolean);
+  let visible = 0;
+  serviceCards.forEach(card => {
+    const searchable = `${card.textContent} ${card.dataset.keywords || ''}`.toLowerCase();
+    const match = !query || terms.every(term => searchable.includes(term));
+    card.hidden = !match;
+    if (match) visible++;
+  });
+  if (noResults) noResults.hidden = !query || visible > 0;
+  if (serviceGrid) serviceGrid.classList.toggle('filtered', Boolean(query));
+}
+serviceSearch?.addEventListener('input', filterServices);
+
+function chooseService(value) {
+  if (!serviceSelect || !value) return;
+  const option = [...serviceSelect.options].find(item => item.value === value || item.textContent.trim() === value);
+  if (option) serviceSelect.value = option.value || option.textContent.trim();
+}
 document.querySelectorAll('[data-service]').forEach(link => link.addEventListener('click', () => {
-  const select = document.querySelector('#service');
-  if (select) select.value = link.dataset.service;
+  chooseService(link.dataset.service);
 }));
+noResults?.querySelector('[data-service]')?.addEventListener('click', () => chooseService('Custom service request'));
 document.querySelector('#year').textContent = new Date().getFullYear();
 
 const form = document.querySelector('#enquiry-form');
 form?.addEventListener('submit', event => {
   event.preventDefault();
-  // Replace this placeholder with your real business inbox before launch.
-  const recipient = 'REPLACE-WITH-YOUR-EMAIL@example.com';
-  if (recipient.includes('REPLACE-WITH-YOUR-EMAIL')) {
-    document.querySelector('#form-status').textContent =
-      'Demo only: add your business email in script.js before publishing. No information has been sent or stored.';
-    return;
-  }
+  const recipient = 'flowpilotstudio0@gmail.com';
   const data = new FormData(form);
-  const subject = encodeURIComponent(`Project enquiry — ${data.get('service')}`);
+  const subject = encodeURIComponent(`FlowPilot Studio project enquiry — ${data.get('service')}`);
   const body = encodeURIComponent(
-    `Name: ${data.get('name')}\nEmail: ${data.get('email')}\nBusiness/website: ${data.get('business') || 'Not provided'}\nService: ${data.get('service')}\n\nProject details:\n${data.get('details')}`
+    `Name: ${data.get('name')}\nEmail: ${data.get('email')}\nBusiness/website: ${data.get('business') || 'Not provided'}\nService: ${data.get('service')}\n\nProject details:\n${data.get('details')}\n\nI understand that this is an enquiry and that scope, feasibility, timeline, and pricing must be confirmed.`
   );
-  window.location.href = `mailto:${recipient}?subject=${subject}&body=${body}`;
-  document.querySelector('#form-status').textContent =
-    'Your email app should open with the enquiry prepared. Please review and send it there.';
+  const mailto = `mailto:${recipient}?subject=${subject}&body=${body}`;
+  const status = document.querySelector('#form-status');
+  status.textContent = 'Opening your email app with a draft addressed to flowpilotstudio0@gmail.com. Review it and press Send to submit your enquiry.';
+  window.location.href = mailto;
 });
